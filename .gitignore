@@ -1,0 +1,15 @@
+# IntelliJ
+.idea/
+*.iml
+
+# Java / Maven
+backend/target/
+*.class
+
+# Node / React
+frontend/node_modules/
+frontend/dist/
+
+# Local
+*.log
+.env
