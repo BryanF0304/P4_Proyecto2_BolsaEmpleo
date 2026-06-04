@@ -2,6 +2,7 @@ package com.una.bolsaempleo.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -25,10 +26,13 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable())   // API stateless: no necesitamos CSRF
+                .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**", "/api/ping").permitAll()
-                        .requestMatchers("/api/puestos/publicos/**", "/api/buscar/**").permitAll()
+                        .requestMatchers("/api/auth/**", "/api/ping", "/api/registro/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/caracteristicas/**",
+                                "/api/puestos/publicos/**",
+                                "/api/buscar/**").permitAll()
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

@@ -13,3 +13,91 @@ GET http://localhost:8080/api/me
 ### 3. Endpoint protegido CON token (pega el token de la respuesta 1)
 GET http://localhost:8080/api/me
 Authorization: Bearer eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJhZG1pbiIsInJvbCI6IkFETUlOIiwiaWF0IjoxNzgwNDc0ODM1LCJleHAiOjE3ODA1NjEyMzV9.fwS_N6rKznKYgN75PA-tmhMaM6SXAnNq0sBkLfkIo-4MPOMIbrs3u8NCl6wR5BHw
+
+### A. Registrar una empresa (pública, queda pendiente)
+POST http://localhost:8080/api/registro/empresa
+Content-Type: application/json
+
+{
+  "nombre": "Web Soft",
+  "localizacion": "San José",
+  "correo": "empresa@websoft.com",
+  "telefono": "8888-0000",
+  "descripcion": "Desarrollo de software",
+  "password": "empresa123"
+}
+
+### B. Login admin — captura el token automáticamente
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{ "username": "admin", "password": "admin123" }
+
+> {%
+    client.global.set("token_admin", response.body.token);
+    client.log("Token admin guardado: " + response.body.token);
+%}
+
+### C. Ver empresas pendientes (usa el token capturado, sin pegar nada)
+GET http://localhost:8080/api/admin/empresas/pendientes
+Authorization: Bearer {{token_admin}}
+
+### D. Aprobar la empresa
+PUT http://localhost:8080/api/admin/empresas/1/aprobar
+Authorization: Bearer {{token_admin}}
+
+### E. Ahora la empresa SÍ puede iniciar sesión
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{ "username": "empresa@websoft.com", "password": "empresa123" }
+
+### F. Ver el árbol de características (público)
+GET http://localhost:8080/api/caracteristicas
+
+### G. Crear una característica nueva como admin
+POST http://localhost:8080/api/admin/caracteristicas
+Content-Type: application/json
+Authorization: Bearer {{token_admin}}
+
+{ "nombre": "React", "parentId": 4 }
+
+### H. Login empresa — captura su token
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{ "username": "empresa@websoft.com", "password": "empresa123" }
+
+> {% client.global.set("token_empresa", response.body.token); %}
+
+### I. Publicar un puesto público que pide Java(7) nivel 3 y JavaScript(12) nivel 2
+POST http://localhost:8080/api/puestos
+Content-Type: application/json
+Authorization: Bearer {{token_empresa}}
+
+{
+  "descripcion": "Full Stack Developer",
+  "salario": 2000,
+  "tipo": "PUBLICO",
+  "caracteristicas": [
+    { "caracteristicaId": 7, "nivel": 3 },
+    { "caracteristicaId": 12, "nivel": 2 }
+  ]
+}
+
+### J. Ver mis puestos (dashboard empresa)
+GET http://localhost:8080/api/puestos/mios
+Authorization: Bearer {{token_empresa}}
+
+### K. Parte pública: 5 puestos recientes (sin token)
+GET http://localhost:8080/api/puestos/publicos/recientes
+
+### L. Búsqueda pública: puestos que pidan Java (id 7)
+GET http://localhost:8080/api/buscar/puestos?caracteristicas=7
+
+### M. Búsqueda que NO debe coincidir: pide C# (id 6)
+GET http://localhost:8080/api/buscar/puestos?caracteristicas=6
+
+### N. Desactivar el puesto (usa el id que devolvió I, probablemente 1)
+PUT http://localhost:8080/api/puestos/1/desactivar
+Authorization: Bearer {{token_empresa}}
