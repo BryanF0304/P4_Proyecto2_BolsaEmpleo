@@ -13,3 +13,5 @@ frontend/dist/
 # Local
 *.log
 .env
+
+backend/uploads/

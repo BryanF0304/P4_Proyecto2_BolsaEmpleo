@@ -101,3 +101,57 @@ GET http://localhost:8080/api/buscar/puestos?caracteristicas=6
 ### N. Desactivar el puesto (usa el id que devolvió I, probablemente 1)
 PUT http://localhost:8080/api/puestos/1/desactivar
 Authorization: Bearer {{token_empresa}}
+
+
+### O. Registrar un oferente (público, queda pendiente)
+POST http://localhost:8080/api/registro/oferente
+Content-Type: application/json
+
+{
+  "identificacion": "1-1111-1111",
+  "nombre": "Ana",
+  "primerApellido": "Pérez",
+  "nacionalidad": "Costarricense",
+  "telefono": "8888-1111",
+  "correo": "ana@correo.com",
+  "lugarResidencia": "Heredia",
+  "password": "ana123"
+}
+
+### P. Admin aprueba al oferente (login admin antes con el bloque B; usa el id, normalmente 1)
+PUT http://localhost:8080/api/admin/oferentes/1/aprobar
+Authorization: Bearer {{token_admin}}
+
+### Q. Login del oferente — captura su token
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{ "username": "ana@correo.com", "password": "ana123" }
+
+> {% client.global.set("token_oferente", response.body.token); %}
+
+### R. El oferente registra habilidades: Java(7) nivel 4 y JavaScript(12) nivel 3
+PUT http://localhost:8080/api/oferente/habilidades
+Content-Type: application/json
+Authorization: Bearer {{token_oferente}}
+
+{
+  "habilidades": [
+    { "caracteristicaId": 7, "nivel": 4 },
+    { "caracteristicaId": 12, "nivel": 3 }
+  ]
+}
+
+### S. La empresa busca candidatos que sepan Java al menos nivel 3
+POST http://localhost:8080/api/candidatos/buscar
+Content-Type: application/json
+Authorization: Bearer {{token_empresa}}
+
+{ "habilidades": [ { "caracteristicaId": 7, "nivel": 3 } ] }
+
+### T. Búsqueda que NO debe coincidir: Java nivel 5 (Ana solo tiene 4)
+POST http://localhost:8080/api/candidatos/buscar
+Content-Type: application/json
+Authorization: Bearer {{token_empresa}}
+
+{ "habilidades": [ { "caracteristicaId": 7, "nivel": 5 } ] }
