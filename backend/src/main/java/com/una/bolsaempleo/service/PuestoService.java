@@ -91,4 +91,9 @@ public class PuestoService {
         return new PuestoDTO(p.getId(), p.getDescripcion(), p.getSalario(),
                 p.getTipo(), p.getActivo(), p.getEmpresa().getNombre(), reqs);
     }
+
+    @Transactional(readOnly = true)
+    public List<PuestoDTO> disponiblesParaOferente() {
+        return puestoRepo.findByActivo(true).stream().map(this::aDTO).toList();
+    }
 }

@@ -46,4 +46,10 @@ public class PuestoController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
+    @GetMapping("/disponibles")
+    @PreAuthorize("hasRole('OFERENTE')")
+    public List<PuestoDTO> disponibles() {
+        return puestoService.disponiblesParaOferente();
+    }
 }

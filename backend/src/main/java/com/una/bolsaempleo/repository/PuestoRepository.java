@@ -8,4 +8,5 @@ public interface PuestoRepository extends JpaRepository<Puesto, Long> {
     List<Puesto> findTop5ByTipoAndActivoOrderByFechaRegistroDesc(String tipo, Boolean activo);
     List<Puesto> findByEmpresaId(Long empresaId);
     List<Puesto> findByTipoAndActivo(String tipo, Boolean activo);   // para la búsqueda pública
+    List<Puesto> findByActivo(Boolean activo);
 }

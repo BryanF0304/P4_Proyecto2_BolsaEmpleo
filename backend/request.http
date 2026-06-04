@@ -155,3 +155,11 @@ Content-Type: application/json
 Authorization: Bearer {{token_empresa}}
 
 { "habilidades": [ { "caracteristicaId": 7, "nivel": 5 } ] }
+
+### V. Oferente logueado ve TODOS los puestos activos (públicos y privados)
+GET http://localhost:8080/api/puestos/disponibles
+Authorization: Bearer {{token_oferente}}
+
+### Diagnóstico oferente
+GET http://localhost:8080/api/me
+Authorization: Bearer {{token_oferente}}
