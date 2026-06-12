@@ -29,6 +29,8 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**", "/api/ping", "/api/registro/**").permitAll()
+                        .requestMatchers("/", "/index.html", "/assets/**", "/*.js", "/*.css", "/*.svg", "/*.ico", "/favicon.svg").permitAll()
+                        .requestMatchers("/uploads/**", "/uploads/cv/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/caracteristicas/**",
                                 "/api/puestos/publicos/**",
                                 "/api/buscar/**").permitAll()
