@@ -11,6 +11,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.nio.file.*;
+import java.util.List;
 
 @Service
 public class OferenteService {
@@ -35,19 +36,34 @@ public class OferenteService {
                 .orElseThrow(() -> new IllegalStateException("El usuario logueado no es un oferente"));
     }
 
+    // Resuelve la carpeta de uploads de forma portable (relativa al directorio de trabajo)
+    private Path carpetaUploads() {
+        return Paths.get(uploadDir).toAbsolutePath().normalize();
+    }
+
+    // Devuelve las habilidades actuales del oferente logueado
+    @Transactional(readOnly = true)
+    public List<HabilidadRequest.Habilidad> getMisHabilidades() {
+        Oferente o = oferenteActual();
+        return ocRepo.findByOferenteId(o.getId()).stream()
+                .map(h -> new HabilidadRequest.Habilidad(
+                        h.getCaracteristica().getId(),
+                        h.getNivel()))
+                .toList();
+    }
+
     // Reemplaza por completo las habilidades del oferente por la lista enviada
     @Transactional
     public void actualizarHabilidades(HabilidadRequest req) {
         Oferente o = oferenteActual();
 
-        // borrar las anteriores y volver a insertar (forma simple y segura)
         ocRepo.deleteAll(ocRepo.findByOferenteId(o.getId()));
 
         if (req.habilidades() != null) {
             for (var h : req.habilidades()) {
                 Caracteristica c = caracteristicaRepo.findById(h.caracteristicaId())
                         .orElseThrow(() -> new IllegalArgumentException(
-                                "Característica no existe: " + h.caracteristicaId()));
+                                "Caracteristica no existe: " + h.caracteristicaId()));
                 OferenteCaracteristica oc = new OferenteCaracteristica();
                 oc.setOferente(o);
                 oc.setCaracteristica(c);
@@ -61,20 +77,20 @@ public class OferenteService {
     @Transactional
     public void subirCurriculo(MultipartFile archivo) throws IOException {
         if (archivo.isEmpty())
-            throw new IllegalArgumentException("El archivo está vacío");
+            throw new IllegalArgumentException("El archivo esta vacio");
         if (!"application/pdf".equals(archivo.getContentType()))
             throw new IllegalArgumentException("Solo se permiten archivos PDF");
 
         Oferente o = oferenteActual();
 
-        Path carpeta = Paths.get(uploadDir);
-        Files.createDirectories(carpeta);                       // crea uploads/cv si no existe
+        Path carpeta = carpetaUploads();
+        Files.createDirectories(carpeta);   // crea la carpeta si no existe
 
         String nombreArchivo = "cv_oferente_" + o.getId() + ".pdf";
         Path destino = carpeta.resolve(nombreArchivo);
-        archivo.transferTo(destino.toAbsolutePath());           // escribe el PDF
+        Files.write(destino, archivo.getBytes()); // compatible con Spring Boot jar
 
-        o.setCurriculoPdf(nombreArchivo);                       // guarda la referencia
+        o.setCurriculoPdf(nombreArchivo);
     }
 
     // Devuelve la ruta del PDF de un oferente (para que la empresa lo descargue)
@@ -83,7 +99,10 @@ public class OferenteService {
         Oferente o = oferenteRepo.findById(oferenteId)
                 .orElseThrow(() -> new IllegalArgumentException("Oferente no encontrado"));
         if (o.getCurriculoPdf() == null)
-            throw new IllegalArgumentException("Ese oferente no ha subido currículo");
-        return Paths.get(uploadDir).resolve(o.getCurriculoPdf());
+            throw new IllegalArgumentException("Ese oferente no ha subido curriculo");
+        Path ruta = carpetaUploads().resolve(o.getCurriculoPdf());
+        if (!Files.exists(ruta))
+            throw new IllegalArgumentException("El archivo del curriculo no se encontro en el servidor");
+        return ruta;
     }
 }

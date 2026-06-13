@@ -33,7 +33,6 @@ public class BusquedaCandidatoService {
         return aprobados.stream()
                 .filter(o -> {
                     List<OferenteCaracteristica> habilidades = ocRepo.findByOferenteId(o.getId());
-                    // cumple si, para cada requisito, tiene esa característica con nivel suficiente
                     return requisitos.stream().allMatch(rq ->
                             habilidades.stream().anyMatch(h ->
                                     h.getCaracteristica().getId().equals(rq.caracteristicaId())
@@ -43,12 +42,21 @@ public class BusquedaCandidatoService {
                 .toList();
     }
 
-    private CandidatoDTO aDTO(Oferente o) {
+    public CandidatoDTO aDTO(Oferente o) {
         List<CandidatoDTO.HabilidadDTO> habs = ocRepo.findByOferenteId(o.getId()).stream()
                 .map(h -> new CandidatoDTO.HabilidadDTO(
                         h.getCaracteristica().getNombre(), h.getNivel()))
                 .toList();
-        return new CandidatoDTO(o.getId(), o.getNombre(), o.getPrimerApellido(),
-                o.getCorreo(), o.getCurriculoPdf() != null, habs);
+        return new CandidatoDTO(
+                o.getId(),
+                o.getIdentificacion(),
+                o.getNombre(),
+                o.getPrimerApellido(),
+                o.getNacionalidad(),
+                o.getTelefono(),
+                o.getCorreo(),
+                o.getLugarResidencia(),
+                o.getCurriculoPdf() != null,
+                habs);
     }
 }

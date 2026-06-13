@@ -2,10 +2,14 @@
 package com.una.bolsaempleo.dto;
 import java.util.List;
 public record CandidatoDTO(
-        Long id,
+        Long   id,
+        String identificacion,
         String nombre,
         String primerApellido,
+        String nacionalidad,
+        String telefono,
         String correo,
+        String lugarResidencia,
         boolean tieneCurriculo,
         List<HabilidadDTO> habilidades) {
 
