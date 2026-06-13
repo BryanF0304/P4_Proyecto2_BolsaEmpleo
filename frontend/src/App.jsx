@@ -800,6 +800,25 @@ function DashboardEmpresa() {
         setBusqLoading(false);
     }
 
+    // Descarga el curriculo usando fetch para enviar el JWT en el header
+    async function descargarCurriculo(candidatoId, nombre) {
+        try {
+            const r = await fetch(`${API}/candidatos/${candidatoId}/curriculo`, {
+                headers: authHeaders(),
+            });
+            if (!r.ok) throw new Error("No se pudo obtener el curriculo");
+            const blob = await r.blob();
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `curriculo_${nombre}.pdf`;
+            a.click();
+            URL.revokeObjectURL(url);
+        } catch (e) {
+            alert("Error al descargar el currículo: " + e.message);
+        }
+    }
+
     return (
         <div className="page">
             <div className="dash-header">
@@ -931,27 +950,50 @@ function DashboardEmpresa() {
                                         </div>
                                         <div style={{ display:"flex", gap: 8, flexDirection:"column", alignItems:"flex-end" }}>
                                             {c.tieneCurriculo && (
-                                                <a
-                                                    href={`${API}/candidatos/${c.id}/curriculo`}
-                                                    target="_blank" rel="noreferrer"
+                                                <button
                                                     className="btn btn-secondary btn-sm"
-                                                >📄 Ver currículo</a>
+                                                    onClick={() => descargarCurriculo(c.id, `${c.nombre}_${c.primerApellido}`)}
+                                                >📄 Ver currículo</button>
                                             )}
                                             <button className="btn btn-ghost btn-sm" onClick={() => setCandidatoDetalle(c.id === candidatoDetalle ? null : c.id)}>
-                                                {c.id === candidatoDetalle ? "Ocultar" : "Ver habilidades"}
+                                                {c.id === candidatoDetalle ? "Ocultar detalle" : "Ver detalle"}
                                             </button>
                                         </div>
                                     </div>
-                                    {c.id === candidatoDetalle && c.habilidades?.length > 0 && (
-                                        <div style={{ marginTop: 12 }}>
-                                            <div style={{ fontSize: 12, color:"var(--muted)", textTransform:"uppercase", letterSpacing:".06em", marginBottom: 8 }}>Habilidades</div>
-                                            <div style={{ display:"flex", flexWrap:"wrap", gap: 6 }}>
-                                                {c.habilidades.map((h,i) => (
-                                                    <span key={i} className="badge badge-purple">
-                            {h.caracteristica} <strong>Niv.{h.nivel}</strong>
-                          </span>
-                                                ))}
+                                    {c.id === candidatoDetalle && (
+                                        <div style={{ marginTop: 14, borderTop: "1px solid var(--border)", paddingTop: 14 }}>
+                                            {/* Datos personales completos */}
+                                            <div style={{ fontSize: 12, color:"var(--muted)", textTransform:"uppercase", letterSpacing:".06em", marginBottom: 8 }}>Datos del candidato</div>
+                                            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"6px 24px", fontSize: 13, marginBottom: 14 }}>
+                                                {c.identificacion && (
+                                                    <div><span style={{ color:"var(--muted)" }}>Identificación: </span>{c.identificacion}</div>
+                                                )}
+                                                {c.nacionalidad && (
+                                                    <div><span style={{ color:"var(--muted)" }}>Nacionalidad: </span>{c.nacionalidad}</div>
+                                                )}
+                                                {c.telefono && (
+                                                    <div><span style={{ color:"var(--muted)" }}>Teléfono: </span>{c.telefono}</div>
+                                                )}
+                                                {c.lugarResidencia && (
+                                                    <div><span style={{ color:"var(--muted)" }}>Residencia: </span>{c.lugarResidencia}</div>
+                                                )}
                                             </div>
+                                            {/* Habilidades */}
+                                            {c.habilidades?.length > 0 && (
+                                                <>
+                                                    <div style={{ fontSize: 12, color:"var(--muted)", textTransform:"uppercase", letterSpacing:".06em", marginBottom: 8 }}>Habilidades</div>
+                                                    <div style={{ display:"flex", flexWrap:"wrap", gap: 6 }}>
+                                                        {c.habilidades.map((h,i) => (
+                                                            <span key={i} className="badge badge-purple">
+                                                                {h.caracteristica} <strong>Niv.{h.nivel}</strong>
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                </>
+                                            )}
+                                            {!c.habilidades?.length && (
+                                                <p style={{ fontSize: 13, color:"var(--muted)" }}>Sin habilidades registradas.</p>
+                                            )}
                                         </div>
                                     )}
                                 </div>
@@ -983,6 +1025,16 @@ function DashboardOferente() {
         fetch(`${API}/puestos/disponibles`, { headers: authHeaders() })
             .then(r => r.json()).then(setPuestos).finally(() => setLoadingP(false));
         fetch(`${API}/caracteristicas`).then(r => r.json()).then(setArbol);
+        // Cargar habilidades ya guardadas para precargar el formulario
+        fetch(`${API}/oferente/habilidades`, { headers: authHeaders() })
+            .then(r => r.ok ? r.json() : [])
+            .then(habs => {
+                if (!habs || habs.length === 0) return;
+                setHabilSel(habs.map(h => h.caracteristicaId));
+                const levels = {};
+                habs.forEach(h => { levels[h.caracteristicaId] = h.nivel; });
+                setHabilLevels(levels);
+            });
     }, []);
 
     async function guardarHabilidades() {

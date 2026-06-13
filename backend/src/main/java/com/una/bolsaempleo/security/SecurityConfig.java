@@ -14,7 +14,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
-@EnableMethodSecurity   // habilita @PreAuthorize por rol en los controllers
+@EnableMethodSecurity
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtFilter;
@@ -28,12 +28,18 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
+                        // Endpoints publicos
                         .requestMatchers("/api/auth/**", "/api/ping", "/api/registro/**").permitAll()
-                        .requestMatchers("/", "/index.html", "/assets/**", "/*.js", "/*.css", "/*.svg", "/*.ico", "/favicon.svg").permitAll()
-                        .requestMatchers("/uploads/**", "/uploads/cv/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/caracteristicas/**",
+                        // Recursos estaticos del SPA
+                        .requestMatchers("/", "/index.html", "/assets/**", "/*.js", "/*.css",
+                                "/*.svg", "/*.ico", "/favicon.svg").permitAll()
+                        // Endpoints publicos de consulta
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/caracteristicas/**",
                                 "/api/puestos/publicos/**",
                                 "/api/buscar/**").permitAll()
+                        // Los CVs NO son publicos: se sirven solo via el endpoint autenticado
+                        // GET /api/candidatos/{id}/curriculo  (requiere EMPRESA)
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )

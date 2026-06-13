@@ -9,7 +9,8 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        registry.addResourceHandler("/uploads/**")
-                .addResourceLocations("file:C:/Users/prueba123/Documents/Jostin/Progar4/P4_Proyecto2_BolsaEmpleo/backend/uploads/cv/");
+        // SPA: cualquier ruta no-API cae en index.html
+        registry.addResourceHandler("/**")
+                .addResourceLocations("classpath:/static/");
     }
 }

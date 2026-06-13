@@ -8,6 +8,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/oferente")
 public class OferenteController {
@@ -16,6 +18,13 @@ public class OferenteController {
 
     public OferenteController(OferenteService oferenteService) {
         this.oferenteService = oferenteService;
+    }
+
+    // Devuelve las habilidades actuales del oferente logueado (para precargar el formulario)
+    @GetMapping("/habilidades")
+    @PreAuthorize("hasRole('OFERENTE')")
+    public ResponseEntity<List<HabilidadRequest.Habilidad>> getMisHabilidades() {
+        return ResponseEntity.ok(oferenteService.getMisHabilidades());
     }
 
     @PutMapping("/habilidades")
